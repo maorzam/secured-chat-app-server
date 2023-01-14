@@ -23,8 +23,7 @@ io.use(async (socket, next) => {
         socket.online = user.online
         return next();
     }
-    const {email, password, username} = socket.handshake.auth;
-    console.log({username})
+    const { password, username } = socket.handshake.auth;
     if (usersStore.isUsernameTaken(username)) {
       return next(new Error("username is already taken"));
     }
@@ -32,35 +31,28 @@ io.use(async (socket, next) => {
         socketId,
         username,
         password,
-        email,
     }
-    const userId = usersStore.addUser(userObject) //TODO: get userdata somehow from socket
-    socket.userId = userId;
+    usersStore.addUser(userObject)
+    socket.userId = socketId;
     socket.username = username;
     socket.online = true;
-    console.log({userId})
     next();
   });
   
   io.on("connection", async (socket) => {
     console.log('new connection')
     usersStore.setUserOnline(socket.userId)
-    socket.emit("session", {
-      sessionId: socket.socketId,
-      userId: socket.userId,
-    });
     socket.join(socket.userId);
   
     let users = usersStore.getUsers()
-    console.log({users})
     users = users.map(user => {
         return {
             ...user,
-            messages: messagesStore.getUserMessages(user.userId)
+            messages: messagesStore.getUserMessages(user.userId),
+            password: null
         }
     })
   
-    console.log({users})
     socket.emit("users-list", users);
   
     // notify current users about new connection
@@ -72,6 +64,7 @@ io.use(async (socket, next) => {
     });
   
     socket.on("message", ({ content, to }) => {
+      console.log({to})
       const userId = socket.userId
       const message = {
         content,
@@ -79,8 +72,8 @@ io.use(async (socket, next) => {
         receiver: to,
         timestamp: new Date()
       };
-      socket.to(to).to(userId).emit("message", message);
-      messageStore.addMessage(userId, message);
+      socket.to(to).emit("message", message);
+      messagesStore.addMessage(userId, message);
     });
   
     // notify users upon disconnection

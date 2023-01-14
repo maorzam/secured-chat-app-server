@@ -1,3 +1,5 @@
+const jwt = require('jsonwebtoken');
+
 module.exports = class MessagesStore {
     constructor() {
         this.messages = {}
@@ -8,7 +10,7 @@ module.exports = class MessagesStore {
         if (!this.messages[userId]) {
             this.messages[userId] = []
         }
-        const encryptedMessage = jwt.sign(content, 'secret-key')
+        const encryptedMessage = jwt.sign(message.content, 'secret-key')
         message.content = encryptedMessage
         this.messages[userId].push(message)
     }

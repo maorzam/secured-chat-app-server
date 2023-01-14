@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-const { v4 : uuidv4 } = require('uuid');
 
 module.exports = class UsersStore {
     constructor() {
@@ -16,21 +15,18 @@ module.exports = class UsersStore {
         return existUsername.length > 0
     }
 
-    addUser({ socketId, username, password, email }) {
+    addUser({ socketId, username, password }) {
         console.log('add user method')
-        const userId = uuidv4()
         const hashedPassword = jwt.sign(password, 'secret-key');
         console.log({hashedPassword})
         this.users.push({
-            userId,
+            userId: socketId,
             username,
-            email,
             password: hashedPassword,
             socketId,
             online: true,
             messages: []
         })
-        return userId
     }
 
     findUserBySocketId(socketId) {
