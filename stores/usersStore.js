@@ -9,19 +9,12 @@ module.exports = class UsersStore {
         return this.users;
     }
 
-    isUsernameTaken(username) {
-        const existUsername = this.users.filter(user => user.username === username)
-        console.log({existUsername})
-        return existUsername.length > 0
-    }
-
-    addUser({ socketId, username, password }) {
-        console.log('add user method')
+    addUser({ socketId, username, password, room }) {
         const hashedPassword = jwt.sign(password, 'secret-key');
-        console.log({hashedPassword})
         this.users.push({
             userId: socketId,
             username,
+            room,
             password: hashedPassword,
             socketId,
             online: true,
@@ -33,10 +26,9 @@ module.exports = class UsersStore {
         return this.users.find(user => user.socketId === socketId)
     }
 
-    setUserOnline(userId) {
-        const user = this.users.find(user => user.userId === userId);
-        if (user) {
-            user.online = true
-        }
+    removeUser(socketId) {
+        const user = this.findUserBySocketId(socketId)
+        this.users = this.users.filter(user => user.socketId === socketId)
+        return user
     }
 }
